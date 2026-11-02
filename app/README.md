@@ -1,7 +1,7 @@
 # Windows portable app
 
-[Download the Windows app](https://github.com/gsshunter-models/capy-baras-mod-manager/releases/download/v1.4.0/CapyBaraModManager-v1.4.0-windows-portable.zip), then extract the full ZIP before running `CapyBaraModManager.exe`.
+[Download Capy Bara's Mod Manager v1.4.5](https://github.com/gsshunter-models/capy-baras-mod-manager/releases/download/v1.4.5/CapyBaraModManager-v1.4.5-windows-portable.zip).
 
-If the direct link does not start, open the [v1.4.0 release page](https://github.com/gsshunter-models/capy-baras-mod-manager/releases/tag/v1.4.0) and choose the app ZIP under **Assets**.
+The current app ZIP and SHA256SUMS.txt are attached to the [v1.4.5 release](https://github.com/gsshunter-models/capy-baras-mod-manager/releases/tag/v1.4.5). Extract the complete ZIP before running CapyBaraModManager.exe. Requires the .NET 9 Desktop Runtime and Microsoft Edge WebView2 Runtime.
 
-Requires the .NET 9 Desktop Runtime and Microsoft Edge WebView2 Runtime. Keep all accompanying files with the executable. `SHA256SUMS.txt` contains the ZIP's SHA-256 checksum. Game files, downloaded mods, local manager settings, browser profiles, and backup history are not part of this package.
+Older ZIPs committed in this folder are previous versions. The release workflow builds the current version from source and publishes its assets to GitHub Releases.

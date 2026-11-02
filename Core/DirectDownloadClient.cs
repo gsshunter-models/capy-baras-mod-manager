@@ -118,7 +118,6 @@ public sealed class DirectDownloadClient : IDisposable
             var mime = response.Content.Headers.ContentType?.MediaType ?? "";
             if (mime.Contains("html", StringComparison.OrdinalIgnoreCase) || mime.Contains("json", StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("The host returned a download page instead of a package. Use Open download page to continue.");
             var size = response.Content.Headers.ContentLength ?? -1;
-            CheckSize(size);
             var disposition = response.Content.Headers.ContentDisposition;
             var finalUri = response.RequestMessage?.RequestUri ?? link;
             var suggested = disposition?.FileNameStar ?? disposition?.FileName;
@@ -158,11 +157,8 @@ public sealed class DirectDownloadClient : IDisposable
         }
         catch { if (client.IsLoggedIn) client.Logout(); throw; }
     }
-    private static void CheckSize(long size) { if (size > ForumDownloadPolicy.MaximumDownloadBytes) throw new InvalidDataException("This download exceeds the 40 GB limit."); }
-
     public static async Task DownloadAsync(ResolvedDownloadFile file, string destination, IProgress<DownloadProgress>? progress, CancellationToken token)
     {
-        CheckSize(file.Size);
         var partial = destination + "." + Guid.NewGuid().ToString("N") + ".part";
         var created = false;
         try
@@ -177,7 +173,7 @@ public sealed class DirectDownloadClient : IDisposable
                 int count;
                 while ((count = await input.ReadAsync(buffer, token).ConfigureAwait(false)) != 0)
                 {
-                    received += count; CheckSize(received);
+                    received = checked(received + count);
                     if (file.Size >= 0 && received > file.Size) throw new InvalidDataException("The host sent more bytes than the expected file size.");
                     await output.WriteAsync(buffer.AsMemory(0, count), token).ConfigureAwait(false);
                     if (watch.ElapsedMilliseconds >= 150) { progress?.Report(new(received, Math.Max(0, file.Size))); watch.Restart(); }

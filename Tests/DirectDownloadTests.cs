@@ -60,9 +60,17 @@ public static class DirectDownloadTests
             await ThrowsAsync<InvalidDataException>(() => client.ResolveAsync(new Uri("https://example.test/track.zip"), default));
         using (var client = new DirectDownloadClient(new FakeHandler(_ => Response(bytes, "text/html", "Track.zip"))))
             await ThrowsAsync<InvalidDataException>(() => client.ResolveAsync(new Uri("https://example.test/track.zip"), default));
-        using (var client = new DirectDownloadClient(new FakeHandler(_ => Response(bytes, "application/zip", "Track.zip", ForumDownloadPolicy.MaximumDownloadBytes + 1))))
-            await ThrowsAsync<InvalidDataException>(() => client.ResolveAsync(new Uri("https://example.test/track.zip"), default));
+        foreach (var largeSize in new[] { 40L * 1024 * 1024 * 1024 + 1, 64L * 1024 * 1024 * 1024, long.MaxValue })
+        using (var client = new DirectDownloadClient(new FakeHandler(_ => Response(bytes, "application/zip", "Track.zip", largeSize))))
+        {
+            using var batch = await client.ResolveAsync(new Uri("https://example.test/track.zip"), default);
+            Check(batch.Files.Single().Size == largeSize, "Package sizes above 40 GB must resolve without a size cap or truncation.");
+            var destination = Path.Combine(root, "large-truncated.zip");
+            await ThrowsAsync<InvalidDataException>(() => DirectDownloadClient.DownloadAsync(batch.Files.Single(), destination, null, default));
+            Check(!File.Exists(destination) && !Directory.GetFiles(root, "*.part").Any(), "A large advertised package still requires a complete transfer and cleans up on truncation.");
+        }
         await FailedDownload(root, "truncated.zip", () => Response(bytes, "application/zip", "Track.zip", bytes.Length + 100), typeof(InvalidDataException));
+        await FailedDownload(root, "overlong.zip", () => Response(bytes, "application/zip", "Track.zip", bytes.Length - 1), typeof(InvalidDataException));
         await FailedDownload(root, "html.zip", () => Response(Encoding.UTF8.GetBytes("<!DOCTYPE html><html>host login</html>"), "application/octet-stream", "Track.zip"), typeof(InvalidDataException));
         await FailedDownload(root, "empty.zip", () => Response([], "application/zip", "Track.zip"), typeof(InvalidDataException));
         using (var client = new DirectDownloadClient(new FakeHandler(_ => Response(bytes, "application/zip", "Track.zip"))))

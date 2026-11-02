@@ -2,7 +2,6 @@ namespace MXSimModManager.Core;
 
 public static class ForumDownloadPolicy
 {
-    public const long MaximumDownloadBytes = 40L * 1024 * 1024 * 1024;
     public const string TracksUrl = "https://forum.mxsimulator.com/viewforum.php?f=4";
     public static bool IsPackage(string path) => new[] { ".zip", ".saf", ".rar", ".7z" }.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase);
     public static Uri WebAddress(string text)

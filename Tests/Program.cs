@@ -29,6 +29,7 @@ var tests = new (string Name, Action<TestArea> Run)[]
     ("Appearance catalog, native presets, apply, backup and safety", a => AppearanceTests.Run(a.Sources)),
     ("Forum downloads, track launch arguments and install undo", a => ForumAndLaunchTests.Run(a.Sources)),
     ("RAR5 and 7z packages install and undo", a => ArchiveFormatTests.Run(a.Sources)),
+    ("Archive entries above 40 GB retain 64-bit lengths and integrity checks", _ => LargePackageTests.Run()),
     ("Public host downloads, names, partial-file cleanup and cancellation", a => DirectDownloadTests.Run(a.Sources)),
     ("Terrain preview paths, native formats, texture placement and cancellation", a => TerrainPreviewTests.Run(a.Sources))
 };

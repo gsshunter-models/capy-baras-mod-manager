@@ -4,13 +4,13 @@ A Windows desktop app for MX Simulator with capybara mascots, oranges and a warm
 
 ## Download the app
 
-**[Download the Windows app, version 1.4.0](https://github.com/gsshunter-models/capy-baras-mod-manager/releases/download/v1.4.0/CapyBaraModManager-v1.4.0-windows-portable.zip)**
+**[Download the Windows app, version 1.4.5](https://github.com/gsshunter-models/capy-baras-mod-manager/releases/download/v1.4.5/CapyBaraModManager-v1.4.5-windows-portable.zip)**
 
-If the direct download does not start, open the [release page](https://github.com/gsshunter-models/capy-baras-mod-manager/releases/tag/v1.4.0) and choose **CapyBaraModManager-v1.4.0-windows-portable.zip** under **Assets**. Extract the full ZIP before running the app. The [download checksum](https://github.com/gsshunter-models/capy-baras-mod-manager/releases/download/v1.4.0/SHA256SUMS.txt) is attached to the release too.
+If the direct download does not start, open the [release page](https://github.com/gsshunter-models/capy-baras-mod-manager/releases/tag/v1.4.5) and choose **CapyBaraModManager-v1.4.5-windows-portable.zip** under **Assets**. Extract the full ZIP before running the app. The [download checksum](https://github.com/gsshunter-models/capy-baras-mod-manager/releases/download/v1.4.5/SHA256SUMS.txt) is attached to the release too.
 
 Requires Windows, the [.NET 9 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/9.0) and [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/). The .NET runtime is not included in this portable build. The source code, synthetic tests, mascot and third-party notices are included in this repository; MX Simulator and downloaded game mods are separate.
 
-Version 1.4.0 adds automatic 3D terrain previews and fixes Play track to retain your saved game setup. It continues using the existing `%LOCALAPPDATA%\MXSimModManager` data folder, so library settings, groups, downloads, setup backups and undo history carry over. Local Desktop deployments preserve the previous portable app through **Previous version.lnk** in the new app folder.
+Version 1.4.5 removes the 40 GB size caps for folder installs, SAF files, ZIP/RAR/7z extraction and direct/in-browser downloads. There is no app-imposed byte-size limit; available disk space and filesystem limits still apply. Installation staging and replacement backups need additional free space. Automatic 3D terrain previews and saved game setups remain supported. It continues using the existing `%LOCALAPPDATA%\MXSimModManager` data folder, so library settings, groups, downloads, setup backups and undo history carry over. Local Desktop deployments preserve the previous portable app through **Previous version.lnk** in the new app folder.
 
 ## Library
 
@@ -49,7 +49,7 @@ ZIP, SAF, RAR and 7z downloads appear in the download list with progress. Once r
 
 **Skip download pages** is enabled by default. Public MediaFire, MEGA, Dropbox and direct archive links clicked in a forum post download directly into the manager. **Paste download link** accepts a copied author link as well. MEGA links need the full `#` key; folders show a package chooser, and file/subfolder selections in the link are respected. MEGA decryption and integrity verification happen locally using [MegaApiClient](https://github.com/gpailler/MegaApiClient). MEGA account login is not required for public links. Link keys and tokens are not saved in the manager's download history.
 
-Direct transfers use a separate temporary file, verify the advertised size when available, and publish the completed file only after successful reading and verification. Cancelling or failing a transfer never leaves a partial package ready to install. The limit is three simultaneous downloads and 40 GB per package. Downloads can be retried by clicking or pasting the link again.
+Direct transfers use a separate temporary file, verify the advertised size when available, and publish the completed file only after successful reading and verification. Cancelling or failing a transfer never leaves a partial package ready to install. Up to three downloads can run at once. There is no app-imposed package-size limit. Downloads can be retried by clicking or pasting the link again.
 
 Some download hosts require manual sign-in, a captcha, or other download steps. These remain on the host's page; the app does not bypass them. Executable downloads and external application launch links are blocked. Broken or removed forum links cannot be recovered by the manager.
 

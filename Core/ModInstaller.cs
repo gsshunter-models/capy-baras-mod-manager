@@ -8,7 +8,6 @@ namespace MXSimModManager.Core;
 
 public static class ModInstaller
 {
-    private const long MaximumBytes = 40L * 1024 * 1024 * 1024;
     private const int MaximumFiles = 100000;
     private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
     { ".saf", ".scram", ".png", ".jpg", ".jpeg", ".tga", ".bmp", ".ppm", ".pgm", ".jm", ".hf", ".shp", ".seq", ".braap", ".soundtable", ".wav", ".ogg", ".txt", ".norm", ".spec", ".amb", ".dat" };
@@ -69,7 +68,6 @@ public static class ModInstaller
             {
                 using var zip = ZipFile.OpenRead(source);
                 if (zip.Entries.Count > MaximumFiles) throw new InvalidDataException("This archive contains too many files.");
-                long total = 0;
                 foreach (var entry in zip.Entries)
                 {
                     var name = entry.FullName.Replace('\\', '/');
@@ -77,13 +75,11 @@ public static class ModInstaller
                         throw new InvalidDataException("Linked archive entries are not supported.");
                     if (name.EndsWith('/')) { if (name.Length > 1) SafePath(staging, name.TrimEnd('/')); continue; }
                     var output = SafePath(staging, name);
-                    total = checked(total + entry.Length);
-                    if (total > MaximumBytes) throw new InvalidDataException("Unpacked content exceeds the 40 GB limit. Install smaller packages separately.");
                     if (!IsModData(name)) { skipped.Add(name); continue; }
                     Directory.CreateDirectory(Path.GetDirectoryName(output)!);
                     using var input = entry.Open();
                     using var target = new FileStream(output, FileMode.CreateNew);
-                    CopyLimited(input, target, entry.Length);
+                    CopyExactLength(input, target, entry.Length);
                 }
             }
             else if (File.Exists(source) && new[] { ".rar", ".7z" }.Contains(Path.GetExtension(source), StringComparer.OrdinalIgnoreCase))
@@ -92,7 +88,6 @@ public static class ModInstaller
                 if (archive.Type is not (ArchiveType.Rar or ArchiveType.SevenZip)) throw new InvalidDataException("The archive format does not match a supported RAR or 7z package.");
                 var entries = archive.Entries.Take(MaximumFiles + 1).ToList();
                 if (entries.Count > MaximumFiles) throw new InvalidDataException("This archive contains too many entries.");
-                long total = 0;
                 foreach (var entry in entries)
                 {
                     var key = entry.Key?.Replace('\\', '/').TrimEnd('/') ?? "";
@@ -102,7 +97,7 @@ public static class ModInstaller
                         throw new InvalidDataException("Linked archive entries are not supported.");
                     if (entry.IsEncrypted) throw new InvalidDataException("Password-protected archives are not supported. Extract them yourself, then install the mod folder.");
                     if (!entry.IsComplete) throw new InvalidDataException("This archive is missing a part. Download all parts and extract them first.");
-                    if (entry.Size < 0 || (total = checked(total + entry.Size)) > MaximumBytes) throw new InvalidDataException("Unpacked content exceeds the 40 GB limit.");
+                    if (entry.Size < 0) throw new InvalidDataException("An archive entry has an invalid size.");
                 }
                 if (archive.Type == ArchiveType.SevenZip || entries.Any(e => e.IsSolid))
                 {
@@ -116,7 +111,6 @@ public static class ModInstaller
             else if (File.Exists(source) && Path.GetExtension(source).Equals(".saf", StringComparison.OrdinalIgnoreCase))
             {
                 EnsureNoLinks(Path.GetDirectoryName(source)!, source);
-                if (new FileInfo(source).Length > MaximumBytes) throw new InvalidDataException("This SAF exceeds the 40 GB install limit.");
                 File.Copy(source, Path.Combine(staging, Path.GetFileName(source)));
             }
             else throw new InvalidDataException("Choose a ZIP, SAF, RAR, 7z, or an extracted mod folder.");
@@ -188,7 +182,7 @@ public static class ModInstaller
         if (!IsModData(name)) { skipped.Add(name); return; }
         Directory.CreateDirectory(Path.GetDirectoryName(output)!);
         using var input = open(); using var target = new FileStream(output, FileMode.CreateNew);
-        CopyLimited(input, target, size);
+        CopyExactLength(input, target, size);
     }
     private static bool IsModData(string relative)
     {
@@ -202,7 +196,7 @@ public static class ModInstaller
     }
     private static void CopyFolderToStage(string source, string staging, List<string> skipped)
     {
-        long total = 0; int count = 0;
+        int count = 0;
         var pending = new Stack<(string Path, int Depth)>(); pending.Push((source, 0)); int directories = 0;
         while (pending.Count > 0)
         {
@@ -216,8 +210,6 @@ public static class ModInstaller
                 var relative = Path.GetRelativePath(source, file);
                 var output = SafePath(staging, relative);
                 if (!IsModData(relative)) { skipped.Add(relative); continue; }
-                total = checked(total + new FileInfo(file).Length);
-                if (total > MaximumBytes) throw new InvalidDataException("This folder exceeds the 40 GB install limit.");
                 Directory.CreateDirectory(Path.GetDirectoryName(output)!);
                 File.Copy(file, output, false);
             }
@@ -225,13 +217,14 @@ public static class ModInstaller
                 if (!Path.GetFileName(child).StartsWith('.')) pending.Push((child, depth + 1));
         }
     }
-    private static void CopyLimited(Stream input, Stream output, long expected)
+    internal static void CopyExactLength(Stream input, Stream output, long expected)
     {
+        if (expected < 0) throw new InvalidDataException("An archive entry has an invalid size.");
         var buffer = new byte[81920]; long written = 0; int read;
         while ((read = input.Read(buffer)) != 0)
         {
             written = checked(written + read);
-            if (written > expected || written > MaximumBytes) throw new InvalidDataException("Archive size does not match its index.");
+            if (written > expected) throw new InvalidDataException("Archive size does not match its index.");
             output.Write(buffer, 0, read);
         }
         if (written != expected) throw new InvalidDataException("Archive entry is incomplete.");

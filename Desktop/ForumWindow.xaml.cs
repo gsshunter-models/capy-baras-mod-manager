@@ -143,7 +143,6 @@ public partial class ForumWindow : Window
         {
             if (ActiveDownloadCount >= 3) throw new InvalidOperationException("Three downloads are already running. Wait for one to finish.");
             var operation = e.DownloadOperation;
-            if (operation.TotalBytesToReceive > ForumDownloadPolicy.MaximumDownloadBytes) throw new InvalidDataException("This download exceeds the 40 GB limit.");
             var name = ForumDownloadPolicy.DownloadName(e.ResultFilePath, operation.MimeType, operation.Uri);
             var item = new ForumDownload { Id = Guid.NewGuid().ToString("N"), Name = name, Host = Uri.TryCreate(operation.Uri, UriKind.Absolute, out var origin) ? origin.Host : "Download host", State = "Downloading", TotalBytes = ExpectedBytes(operation), CreatedUtc = DateTime.UtcNow };
             var directory = Path.Combine(stateRoot, "downloads", item.Id); Directory.CreateDirectory(directory);
@@ -171,8 +170,7 @@ public partial class ForumWindow : Window
             {
                 item.ReceivedBytes = operation.BytesReceived;
                 item.TotalBytes = ExpectedBytes(operation);
-                if (item.ReceivedBytes > ForumDownloadPolicy.MaximumDownloadBytes || item.TotalBytes > ForumDownloadPolicy.MaximumDownloadBytes) { item.State = "Cancelled: exceeds 40 GB"; operation.Cancel(); SaveHistory(); }
-                else if (operation.State == CoreWebView2DownloadState.Completed) { item.State = "Ready to install"; StatusText.Text = "Download ready. Select Install selected to review its contents."; SaveHistory(); }
+                if (operation.State == CoreWebView2DownloadState.Completed) { item.State = "Ready to install"; StatusText.Text = "Download ready. Select Install selected to review its contents."; SaveHistory(); }
                 else if (operation.State == CoreWebView2DownloadState.Interrupted) { item.State = "Interrupted: " + operation.InterruptReason; SaveHistory(); }
             }
             catch (InvalidOperationException) { item.State = "Interrupted: browser closed"; SaveHistory(); }

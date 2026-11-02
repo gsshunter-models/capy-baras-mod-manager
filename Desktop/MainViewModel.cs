@@ -25,7 +25,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private Preferences prefs;
     private bool isBusy;
     private bool gameRunning;
-    private string searchText = "", category = "All", statusText = "Reading your library…", activityText = "Capy Bara's • v1.4.0";
+    private string searchText = "", category = "All", statusText = "Reading your library…", activityText = "Capy Bara's • v1.4.5";
     private ModPackage? selectedPackage;
     private List<ModPackage> selection = [];
     private ModGroup? selectedGroup;
