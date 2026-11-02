@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net9.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup><PackageReference Include="SharpCompress" Version="0.50.7" /></ItemGroup>
+  <ItemGroup><PackageReference Include="MegaApiClient" Version="1.10.5" /></ItemGroup>
+  <ItemGroup><PackageReference Include="Newtonsoft.Json" Version="13.0.4" /></ItemGroup>
+</Project>

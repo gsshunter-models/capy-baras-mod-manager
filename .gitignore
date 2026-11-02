@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+artifacts/
+qa-*
+**/.test-temp/
+.dotnet-home/
+.nuget/

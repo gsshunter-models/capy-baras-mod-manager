@@ -1,0 +1,73 @@
+<Window x:Class="MXSimModManager.Desktop.SetupManagerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Bike setups — Capy Bara's Mod Manager" Icon="app.ico" Width="1160" Height="810" MinWidth="990" MinHeight="700"
+        WindowStartupLocation="CenterOwner" Background="#14120F" Foreground="#F5EFDF"
+        FontFamily="Segoe UI" FontSize="13" Closing="Window_Closing">
+    <Window.Resources>
+        <Style TargetType="TextBlock"><Setter Property="Foreground" Value="#F5EFDF"/></Style>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#332B20"/><Setter Property="Foreground" Value="#F5EFDF"/>
+            <Setter Property="BorderBrush" Value="#4C4030"/><Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="11,8"/><Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button"><Border x:Name="Surface" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Opacity" Value="0.8"/></Trigger><Trigger Property="IsEnabled" Value="False"><Setter TargetName="Surface" Property="Opacity" Value="0.35"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
+        </Style>
+        <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}"><Setter Property="Background" Value="#FFAB49"/><Setter Property="Foreground" Value="#2D1C0B"/><Setter Property="BorderBrush" Value="#FFAB49"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
+        <Style x:Key="ActionButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}"><Setter Property="Margin" Value="0,0,7,7"/><Setter Property="FontSize" Value="11"/></Style>
+        <Style TargetType="TextBox"><Setter Property="Background" Value="#191610"/><Setter Property="Foreground" Value="#F5EFDF"/><Setter Property="BorderBrush" Value="#4C4030"/><Setter Property="Padding" Value="9,7"/><Setter Property="CaretBrush" Value="#FFAB49"/><Setter Property="SelectionBrush" Value="#765330"/></Style>
+        <Style TargetType="ListBoxItem"><Setter Property="Padding" Value="12,11"/><Setter Property="Margin" Value="0,0,0,3"/><Setter Property="Foreground" Value="#F5EFDF"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem"><Border x:Name="Surface" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="6"><ContentPresenter/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="#382E20"/></Trigger><Trigger Property="IsSelected" Value="True"><Setter TargetName="Surface" Property="Background" Value="#4A3520"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
+        <Style TargetType="DataGridColumnHeader"><Setter Property="Background" Value="#30281D"/><Setter Property="Foreground" Value="#BBAE98"/><Setter Property="Padding" Value="11,12"/><Setter Property="FontSize" Value="11"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="BorderThickness" Value="0,0,0,1"/><Setter Property="BorderBrush" Value="#4C4030"/></Style>
+        <Style TargetType="DataGridRow"><Setter Property="Background" Value="#1D1A15"/><Setter Property="Foreground" Value="#F5EFDF"/><Setter Property="MinHeight" Value="39"/><Style.Triggers><Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="#4A3520"/></Trigger></Style.Triggers></Style>
+        <Style TargetType="DataGridCell"><Setter Property="BorderThickness" Value="0"/><Setter Property="Padding" Value="11,7"/><Setter Property="Foreground" Value="#F5EFDF"/><Setter Property="Background" Value="Transparent"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="DataGridCell"><Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}"><ContentPresenter VerticalAlignment="Center"/></Border></ControlTemplate></Setter.Value></Setter><Style.Triggers><Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="Transparent"/></Trigger></Style.Triggers></Style>
+    </Window.Resources>
+    <Grid Margin="25">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <StackPanel Margin="0,0,0,18"><TextBlock Text="Bike setups" FontSize="27" FontWeight="SemiBold"/><TextBlock Text="Edit and save native MX Simulator setup profiles." Foreground="#B6AA98" Margin="1,7,0,0"/></StackPanel>
+        <Border Grid.Row="1" Background="#2A2D1D" BorderBrush="#465135" BorderThickness="1" CornerRadius="8" Padding="13,11" Margin="0,0,0,17">
+            <TextBlock Text="This editor reads saved files on disk. For live values, use /writesetup NAME in the game, then Refresh here. Apply to saved game settings requires the game to be closed." Foreground="#C1CBA8" TextWrapping="Wrap" FontSize="12" LineHeight="18"/>
+        </Border>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="250"/><ColumnDefinition Width="17"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+            <Border Background="#211E18" BorderBrush="#40372A" BorderThickness="1" CornerRadius="9" Padding="13">
+                <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                    <Grid Margin="0,0,0,13"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="SAVED PROFILES" Foreground="#FFAB49" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"/><Button Grid.Column="1" Content="Refresh" Click="Refresh_Click" FontSize="11" Padding="9,6"/></Grid>
+                    <ListBox x:Name="ProfileList" Grid.Row="1" ItemsSource="{Binding Profiles}" SelectionChanged="ProfileList_SelectionChanged" Background="Transparent" BorderThickness="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate><DataTemplate><StackPanel><TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="Wrap"/><TextBlock Text="{Binding Details}" Foreground="#B6AA98" FontSize="10" Margin="0,5,0,0" TextWrapping="Wrap"/></StackPanel></DataTemplate></ListBox.ItemTemplate>
+                    </ListBox>
+                    <StackPanel Grid.Row="2" Margin="0,13,0,0"><Button Content="Import native setup…" Click="Import_Click" Margin="0,0,0,7"/><Button Content="Read saved game settings" Click="ReadCurrent_Click" Margin="0,0,0,7"/><Button Content="Save disk settings as…" Click="CaptureCurrent_Click" FontSize="11"/><TextBlock Text="Profiles stay in your personal setups folder. Edits are saved only when you choose Save." Foreground="#A49680" TextWrapping="Wrap" FontSize="10" Margin="0,11,0,0" LineHeight="16"/></StackPanel>
+                </Grid>
+            </Border>
+            <Border Grid.Column="2" Background="#211E18" BorderBrush="#40372A" BorderThickness="1" CornerRadius="9" Padding="17">
+                <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                    <Grid Margin="0,0,0,9"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{Binding EditorTitle}" FontSize="19" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding EditorTitle}"/><TextBlock Grid.Column="1" Text="{Binding DirtyText}" Foreground="#FFAB49" FontSize="11" VerticalAlignment="Center" Margin="12,0,0,0"/></Grid>
+                    <TextBlock Grid.Row="1" Text="{Binding ProfileNote}" Foreground="#BBAE98" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,12" LineHeight="17"/>
+                    <Grid Grid.Row="2" Margin="0,0,0,12">
+                        <TextBox x:Name="SettingsSearch" TextChanged="SettingsSearch_TextChanged" ToolTip="Search setting names, groups and keys" AutomationProperties.Name="Search setup settings"/>
+                        <TextBlock Text="Search setup settings…" Foreground="#AA987E" Margin="10,0" VerticalAlignment="Center" IsHitTestVisible="False"><TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding ElementName=SettingsSearch, Path=Text}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
+                    </Grid>
+                    <DataGrid x:Name="SettingsGrid" Grid.Row="3" ItemsSource="{Binding SettingsView}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False" HeadersVisibility="Column" GridLinesVisibility="None" RowHeaderWidth="0" BorderThickness="0" Background="#1D1A15" SelectionMode="Single" CellEditEnding="SettingsGrid_CellEditEnding">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="GROUP" Binding="{Binding Group}" IsReadOnly="True" Width="130"/>
+                            <DataGridTemplateColumn Header="SETTING" IsReadOnly="True" Width="*"><DataGridTemplateColumn.CellTemplate><DataTemplate><TextBlock Text="{Binding Label}" ToolTip="{Binding Key}" TextWrapping="Wrap"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                            <DataGridTextColumn Header="VALUE (EDITABLE)" Binding="{Binding Value, UpdateSourceTrigger=PropertyChanged}" Width="190"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <StackPanel Grid.Row="4" Margin="0,15,0,0">
+                        <WrapPanel>
+                            <Button Content="Save" Click="Save_Click" Style="{StaticResource PrimaryButton}" IsEnabled="{Binding HasSettings}" Margin="0,0,7,7"/>
+                            <Button Content="Save as…" Click="SaveAs_Click" Style="{StaticResource ActionButton}" IsEnabled="{Binding HasSettings}"/>
+                            <Button Content="Export…" Click="Export_Click" Style="{StaticResource ActionButton}" IsEnabled="{Binding HasProfile}"/>
+                            <Button Content="Apply to saved game settings…" Click="Apply_Click" Style="{StaticResource ActionButton}" IsEnabled="{Binding HasProfile}"/>
+                            <Button Content="Copy game load command" Click="CopyCommand_Click" Style="{StaticResource ActionButton}" IsEnabled="{Binding HasProfile}"/>
+                            <Button Content="Restore previous config backup…" Click="RestoreBackup_Click" Style="{StaticResource ActionButton}"/>
+                            <Button Content="Open backups" Click="OpenBackups_Click" Style="{StaticResource ActionButton}"/>
+                        </WrapPanel>
+                        <TextBlock Text="Values use the game's native format. Copy a load command, press T in MX Simulator, then paste and press Enter." Foreground="#A49680" FontSize="10" TextWrapping="Wrap" LineHeight="16" Margin="0,3,0,0"/>
+                        <TextBlock Text="Suspension: 0–100. Toggles: Yes / No. Brakes: Normal / Antilock. Stop wheelies also accepts Front Only. Bike uses its native model name." Foreground="#A49680" FontSize="10" TextWrapping="Wrap" LineHeight="16" Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+        <TextBlock Grid.Row="3" Text="{Binding StatusText}" Foreground="#C0B29B" Margin="1,14,0,0" FontSize="11" TextWrapping="Wrap"/>
+    </Grid>
+</Window>
