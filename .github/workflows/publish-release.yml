@@ -1,0 +1,55 @@
+name: Publish app release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-release.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-v1.3.0
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'gsshunter-models/capy-baras-mod-manager' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Check out the release files
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Verify the app ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd app
+          tr -d '\r' < SHA256SUMS.txt | sha256sum --check -
+      - name: Publish v1.3.0 and its download assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TARGET: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if gh release view v1.3.0 >/dev/null 2>&1; then
+            gh release upload v1.3.0 \
+              app/CapyBaraModManager-v1.3.0-windows-portable.zip \
+              app/SHA256SUMS.txt --clobber
+          else
+            gh release create v1.3.0 \
+              app/CapyBaraModManager-v1.3.0-windows-portable.zip \
+              app/SHA256SUMS.txt \
+              --target "$RELEASE_TARGET" \
+              --title "Capy Bara's Mod Manager v1.3.0" \
+              --notes-file docs/releases/v1.3.0.md \
+              --latest
+          fi

@@ -4,7 +4,9 @@ A Windows desktop app for MX Simulator with capybara mascots, oranges and a warm
 
 ## Download the app
 
-[Download the Windows portable app, version 1.3.0](app/CapyBaraModManager-v1.3.0-windows-portable.zip?raw=1). If GitHub shows a file page, choose **Download raw**. The checksum is in [app/SHA256SUMS.txt](app/SHA256SUMS.txt).
+**[Download the Windows app, version 1.3.0](https://github.com/gsshunter-models/capy-baras-mod-manager/releases/download/v1.3.0/CapyBaraModManager-v1.3.0-windows-portable.zip)**
+
+If the direct download does not start, open the [release page](https://github.com/gsshunter-models/capy-baras-mod-manager/releases/tag/v1.3.0) and choose **CapyBaraModManager-v1.3.0-windows-portable.zip** under **Assets**. Extract the full ZIP before running the app. The [download checksum](https://github.com/gsshunter-models/capy-baras-mod-manager/releases/download/v1.3.0/SHA256SUMS.txt) is attached to the release too.
 
 Requires Windows, the [.NET 9 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/9.0) and [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/). The .NET runtime is not included in this portable build. The source code, synthetic tests, mascot and third-party notices are included in this repository; MX Simulator and downloaded game mods are separate.
 
