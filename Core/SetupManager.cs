@@ -179,6 +179,18 @@ public static class SetupManager
             .OrderByDescending(Path.GetFileName, StringComparer.Ordinal).ToList();
     }
 
+    internal static void SelectTrack(string trackId, string personalFolder, string stateRoot, bool gameRunning)
+    {
+        RequireClosed(gameRunning);
+        trackId = GameLaunch.ValidateTrackId(trackId);
+        var config = ConfigPath(personalFolder);
+        var document = SetupDocument.Read(config);
+        var updated = document.Merge(new(StringComparer.OrdinalIgnoreCase) { ["track"] = trackId });
+        if (updated.AsSpan().SequenceEqual(document.OriginalBytes)) return;
+        Backup(document.OriginalBytes, stateRoot, "config", ".config");
+        WriteConfig(config, document.OriginalBytes, updated);
+    }
+
     public static string RestoreBackup(string backupPath, string personalFolder, string stateRoot, bool gameRunning)
     {
         RequireClosed(gameRunning);

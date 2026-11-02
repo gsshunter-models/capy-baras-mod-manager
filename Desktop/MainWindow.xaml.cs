@@ -12,6 +12,8 @@ public partial class MainWindow : Window
         Loaded += async (_, _) =>
         {
             await viewModel.InitializeAsync();
+            var taskArgs = Environment.GetCommandLineArgs(); var taskTrack = Array.IndexOf(taskArgs, "--preview-track");
+            if (taskTrack >= 0 && taskTrack + 1 < taskArgs.Length) viewModel.SelectedPackage = viewModel.Packages.FirstOrDefault(p => p.TrackIds.Contains(taskArgs[taskTrack + 1], StringComparer.OrdinalIgnoreCase)) ?? viewModel.SelectedPackage;
             if (Environment.GetCommandLineArgs().Contains("--appearance")) viewModel.AppearanceCommand.Execute(null);
             if (Environment.GetCommandLineArgs().Contains("--forum")) viewModel.ForumCommand.Execute(null);
         };

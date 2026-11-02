@@ -4,13 +4,13 @@ A Windows desktop app for MX Simulator with capybara mascots, oranges and a warm
 
 ## Download the app
 
-**[Download the Windows app, version 1.3.0](https://github.com/gsshunter-models/capy-baras-mod-manager/releases/download/v1.3.0/CapyBaraModManager-v1.3.0-windows-portable.zip)**
+**[Download the Windows app, version 1.4.0](https://github.com/gsshunter-models/capy-baras-mod-manager/releases/download/v1.4.0/CapyBaraModManager-v1.4.0-windows-portable.zip)**
 
-If the direct download does not start, open the [release page](https://github.com/gsshunter-models/capy-baras-mod-manager/releases/tag/v1.3.0) and choose **CapyBaraModManager-v1.3.0-windows-portable.zip** under **Assets**. Extract the full ZIP before running the app. The [download checksum](https://github.com/gsshunter-models/capy-baras-mod-manager/releases/download/v1.3.0/SHA256SUMS.txt) is attached to the release too.
+If the direct download does not start, open the [release page](https://github.com/gsshunter-models/capy-baras-mod-manager/releases/tag/v1.4.0) and choose **CapyBaraModManager-v1.4.0-windows-portable.zip** under **Assets**. Extract the full ZIP before running the app. The [download checksum](https://github.com/gsshunter-models/capy-baras-mod-manager/releases/download/v1.4.0/SHA256SUMS.txt) is attached to the release too.
 
 Requires Windows, the [.NET 9 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/9.0) and [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/en-us/microsoft-edge/webview2/). The .NET runtime is not included in this portable build. The source code, synthetic tests, mascot and third-party notices are included in this repository; MX Simulator and downloaded game mods are separate.
 
-Version 1.3.0 renames the app and its Desktop shortcut. It continues using the existing `%LOCALAPPDATA%\MXSimModManager` data folder, so library settings, groups, downloads, setup backups and undo history carry over. The previous portable app remains available through **Previous version.lnk** in the new app folder.
+Version 1.4.0 adds automatic 3D terrain previews and fixes Play track to retain your saved game setup. It continues using the existing `%LOCALAPPDATA%\MXSimModManager` data folder, so library settings, groups, downloads, setup backups and undo history carry over. Local Desktop deployments preserve the previous portable app through **Previous version.lnk** in the new app folder.
 
 ## Library
 
@@ -20,6 +20,16 @@ Version 1.3.0 renames the app and its Desktop shortcut. It continues using the e
 - Track totals count distinct virtual terrain paths. Detection does not verify that every dependency is installed or that nested track folders are correctly arranged.
 - Base-game content is optional and read-only. Loose individual files in the library root are grouped for inspection and managed manually.
 - The library refreshes after file changes. Export inventory as CSV.
+
+## Automatic 3D track preview
+
+Selecting a track automatically displays a low-detail 3D terrain preview in the details panel. Drag to rotate, scroll to zoom, use Reset to return to the starting view, or expand it into a larger window. Packs containing multiple tracks have a preview layout dropdown. The resolution slider switches between **Low** (65 × 65 mesh, 256 × 256 texture), **Medium** (129 × 129, 512 × 512; default), **High** (257 × 257, 1024 × 1024), and **Ultra** (512 × 512, 2048 × 2048). Higher resolution gives more detail and takes more time to build. Changes load in the background and preserve your viewing angle.
+
+The viewer reads the installed `terrain.hf` and PNG heightmap, plus available tile/decal textures from loose files and SAF archives. Loading runs in the background, switches cancel stale requests, and the eight most recent track/resolution scenes stay cached until the library refreshes. It reads individual SAF entries without extracting the archive.
+
+This is a terrain preview: objects, buildings, vegetation, skyboxes, normal maps and live erode are not rendered. Tile textures use average colors beneath the actual placed decals. Missing/shared/protected or oversized textures can give an approximate result; missing or protected heightmaps show an unavailable message. Protected resources are not decrypted. Previewing does not change the game or its files.
+
+Format references: [MX Simulator track editing](https://mxsimulator.com/editing.html), [decal placement](https://forum.mxsimulator.com/viewtopic.php?t=1134).
 
 ## Install and revert
 
@@ -47,7 +57,7 @@ Some download hosts require manual sign-in, a captcha, or other download steps. 
 
 ## Play an installed track
 
-Select a track package, then choose **Play track** in its details panel. Multi-track packages open a layout picker. The game launches directly on the chosen virtual track folder using its native `--track` option. Disabled packages cannot be played.
+Select a track package, then choose **Play track** in its details panel. Multi-track packages open a layout picker. The manager backs up the saved game config and changes only its `track` field, then launches MX Simulator normally with that track selected. Choose **New Race → Start** in the game. Your saved bike setup, gear, rider number, controls and graphics settings remain intact. The special single-AI `--track` startup mode is no longer used. Disabled packages cannot be played. A missing saved config must be created by starting and cleanly exiting the game first; the manager will not create a default setup.
 
 If MX Simulator is already open, the app asks before restarting it on the selected track. Save your replay and setup first; quit through the game's menu first if you want live settings saved. The app requests a normal close and never forcibly terminates the game.
 
@@ -91,4 +101,4 @@ The manager does not patch `mx.exe`, inject code, replace OpenGL DLLs, or alter 
 
 Build: `dotnet build Desktop/MXSimModManager.csproj -c Release`.
 
-Tests: `dotnet run --project Tests/MXSimModManager.Tests.csproj -c Release`. Tests use generated temporary libraries; `-- --scan-real` adds an optional read-only scan of the current personal library. `-- --resolve-link URL --download-if-under BYTES` optionally checks a public host link and downloads small packages into the disposable test area for preview only. Builds restore pinned WebView2, SharpCompress, MegaApiClient and Newtonsoft.Json NuGet packages. Their notices are included in the portable app's `licenses` folder.
+Tests: `dotnet run --project Tests/MXSimModManager.Tests.csproj -c Release`. Windows terrain/image checks: `dotnet run --project Tests.Windows/MXSimModManager.WindowsTests.csproj -c Release -p:BuildInParallel=false`. Tests use generated temporary libraries; `-- --scan-real` adds an optional read-only scan of the current personal library. `-- --resolve-link URL --download-if-under BYTES` optionally checks a public host link and downloads small packages into the disposable test area for preview only. Builds restore pinned WebView2, SharpCompress, MegaApiClient and Newtonsoft.Json NuGet packages. Their notices are included in the portable app's `licenses` folder.

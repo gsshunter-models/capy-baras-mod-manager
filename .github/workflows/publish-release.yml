@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: publish-v1.3.0
+  group: publish-v1.4.0
   cancel-in-progress: false
 
 jobs:
@@ -32,7 +32,7 @@ jobs:
           set -euo pipefail
           cd app
           tr -d '\r' < SHA256SUMS.txt | sha256sum --check -
-      - name: Publish v1.3.0 and its download assets
+      - name: Publish v1.4.0 and its download assets
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -40,16 +40,16 @@ jobs:
           RELEASE_TARGET: ${{ github.sha }}
         run: |
           set -euo pipefail
-          if gh release view v1.3.0 >/dev/null 2>&1; then
-            gh release upload v1.3.0 \
-              app/CapyBaraModManager-v1.3.0-windows-portable.zip \
+          if gh release view v1.4.0 >/dev/null 2>&1; then
+            gh release upload v1.4.0 \
+              app/CapyBaraModManager-v1.4.0-windows-portable.zip \
               app/SHA256SUMS.txt --clobber
           else
-            gh release create v1.3.0 \
-              app/CapyBaraModManager-v1.3.0-windows-portable.zip \
+            gh release create v1.4.0 \
+              app/CapyBaraModManager-v1.4.0-windows-portable.zip \
               app/SHA256SUMS.txt \
               --target "$RELEASE_TARGET" \
-              --title "Capy Bara's Mod Manager v1.3.0" \
-              --notes-file docs/releases/v1.3.0.md \
+              --title "Capy Bara's Mod Manager v1.4.0" \
+              --notes-file docs/releases/v1.4.0.md \
               --latest
           fi

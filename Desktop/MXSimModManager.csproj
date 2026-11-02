@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType><TargetFramework>net9.0-windows</TargetFramework><UseWPF>true</UseWPF>
     <ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><AssemblyName>CapyBaraModManager</AssemblyName>
-    <ApplicationManifest>app.manifest</ApplicationManifest><Version>1.3.0</Version>
+    <ApplicationManifest>app.manifest</ApplicationManifest><Version>1.4.0</Version>
     <Product>Capy Bara's Mod Manager</Product><Title>Capy Bara's Mod Manager</Title><Description>Capybara and orange themed mod manager for MX Simulator.</Description>
     <ApplicationIcon>app.ico</ApplicationIcon>
   </PropertyGroup>

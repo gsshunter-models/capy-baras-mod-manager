@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Windows;
@@ -24,7 +25,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private Preferences prefs;
     private bool isBusy;
     private bool gameRunning;
-    private string searchText = "", category = "All", statusText = "Reading your library…", activityText = "Capy Bara's • v1.3.0";
+    private string searchText = "", category = "All", statusText = "Reading your library…", activityText = "Capy Bara's • v1.4.0";
     private ModPackage? selectedPackage;
     private List<ModPackage> selection = [];
     private ModGroup? selectedGroup;
@@ -58,6 +59,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public ICommand AppearanceCommand { get; }
     public ICommand ForumCommand { get; }
     public ICommand PlayTrackCommand { get; }
+    public PreviewCatalog? PreviewCatalog { get; private set; }
 
     public MainViewModel(Window owner)
     {
@@ -202,7 +204,8 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         try
         {
             var personal = PersonalFolder; var install = prefs.InstallFolder; var include = IncludeBaseGame; var selectedPath = SelectedPackage?.Path;
-            var snapshot = await Task.Run(() => LibraryScanner.Scan(personal, install, Path.Combine(stateRoot, "disabled"), include));
+            var result = await Task.Run(() => { var snapshot = LibraryScanner.Scan(personal, install, Path.Combine(stateRoot, "disabled"), include, collectPreviewFiles: true); return (snapshot, catalog: new PreviewCatalog(snapshot.PreviewFiles)); });
+            var snapshot = result.snapshot; PreviewCatalog = result.catalog; Raise(nameof(PreviewCatalog));
             Packages.Clear(); foreach (var item in snapshot.Packages) Packages.Add(item);
             TotalCount = Packages.Count; TrackCount = snapshot.UniqueTrackCount; GearCount = snapshot.GearPackageCount; BikeCount = snapshot.BikePackageCount;
             LibrarySizeText = ModPackage.FormatSize(snapshot.TotalBytes) + " indexed";
@@ -292,7 +295,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         if (package == null || package.IsDisabled || package.TrackIds.Count == 0) return;
         var id = package.TrackIds.Count == 1 ? package.TrackIds[0] : Dialogs.ChooseTrack(owner, package.Name, package.TrackIds);
         if (id == null) return;
-        _ = GameLaunch.ForTrack(Path.Combine(prefs.InstallFolder, "mx.exe"), id);
+        _ = GameLaunch.ValidateTrackId(id);
         if (IsGameRunning()) await RestartGameAsync(id);
         else LaunchGame(id);
     }
@@ -306,9 +309,11 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             if (dialog.ShowDialog(owner) != true) return;
             exe = dialog.FileName; prefs.InstallFolder = Path.GetDirectoryName(exe)!; Save();
         }
-        Process.Start(trackId == null ? new ProcessStartInfo(exe) { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(exe)! } : GameLaunch.ForTrack(exe, trackId));
+        var libraryKey = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Path.GetFullPath(PersonalFolder).TrimEnd(Path.DirectorySeparatorChar).ToUpperInvariant())))[..16];
+        var setupState = Path.Combine(stateRoot, "libraries", libraryKey);
+        Process.Start(trackId == null ? new ProcessStartInfo(exe) { UseShellExecute = true, WorkingDirectory = Path.GetDirectoryName(exe)! } : GameLaunch.ForTrack(exe, trackId, PersonalFolder, setupState, IsGameRunning()));
         prefs.PendingSinceUtc = null; Save(); UpdateGameState();
-        if (trackId != null) StatusText = "Launching track: " + trackId;
+        if (trackId != null) StatusText = "Saved setup retained. Track selected: " + trackId + ". Choose New Race → Start in MX Simulator.";
     }
     private async Task RestartGameAsync(string? trackId = null)
     {
@@ -325,7 +330,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(20));
             try { await processes[0].WaitForExitAsync(timeout.Token); }
             catch (OperationCanceledException) { throw new InvalidOperationException("The game is still open. Finish closing it, then use Launch game."); }
-            LaunchGame(trackId); StatusText = trackId == null ? "Game relaunched with the current library." : "Launching track: " + trackId;
+            LaunchGame(trackId); if (trackId == null) StatusText = "Game relaunched with the current library.";
         }
         finally { foreach (var process in processes) process.Dispose(); IsBusy = false; }
     }

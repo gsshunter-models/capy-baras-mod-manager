@@ -1,0 +1,21 @@
+<UserControl x:Class="MXSimModManager.Desktop.TrackPreviewControl" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" MinHeight="220">
+    <Border Background="#191610" BorderBrush="#40372A" BorderThickness="1" CornerRadius="9" Padding="9">
+        <Grid>
+            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*" MinHeight="160"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+            <DockPanel Margin="0,0,0,6"><TextBlock Text="3D TRACK PREVIEW" Foreground="#FFAB49" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center"/><StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right"><Button Content="Reset" Click="Reset_Click" FontSize="10" Padding="6,3" Margin="5,0,0,0"/><Button x:Name="ExpandButton" Content="↗" Click="Expand_Click" FontSize="11" Padding="7,3" Margin="5,0,0,0" ToolTip="Open a larger track preview"/></StackPanel></DockPanel>
+            <ComboBox x:Name="LayoutBox" Grid.Row="1" Visibility="Collapsed" Margin="0,1,0,6" SelectionChanged="Layout_Changed" FontSize="10" MaxDropDownHeight="220" Foreground="#211E18" Background="#F5EFDF" AutomationProperties.Name="Preview track layout"/>
+            <StackPanel Grid.Row="2" Margin="0,0,0,5"><TextBlock x:Name="ResolutionLabel" Text="Resolution: Medium" Foreground="#B6AA98" FontSize="10"/><Slider x:Name="ResolutionSlider" Minimum="0" Maximum="3" Value="1" TickFrequency="1" IsSnapToTickEnabled="True" SmallChange="1" LargeChange="1" ValueChanged="Resolution_Changed" AutomationProperties.Name="Preview resolution" ToolTip="Low: faster · Medium: balanced · High: more detail · Ultra: 512 × 512"/></StackPanel>
+            <Border Grid.Row="3" ClipToBounds="True" CornerRadius="5" Background="#100F0C" x:Name="ViewSurface" MouseDown="View_MouseDown" MouseMove="View_MouseMove" MouseUp="View_MouseUp" MouseWheel="View_MouseWheel" Cursor="Hand" ToolTip="Drag to rotate. Scroll to zoom.">
+                <Grid>
+                    <Viewport3D x:Name="Viewport" IsHitTestVisible="False">
+                        <Viewport3D.Camera><OrthographicCamera x:Name="Camera" Width="1.6" Position="1,1,1" LookDirection="-1,-1,-1" UpDirection="0,1,0" NearPlaneDistance="0.01" FarPlaneDistance="20"/></Viewport3D.Camera>
+                        <ModelVisual3D><ModelVisual3D.Content><Model3DGroup><AmbientLight Color="#AAAAAA"/><DirectionalLight Color="#FFFFFF" Direction="-1,-1,-0.5"/></Model3DGroup></ModelVisual3D.Content></ModelVisual3D>
+                        <ModelVisual3D x:Name="TerrainVisual"/>
+                    </Viewport3D>
+                    <TextBlock x:Name="OverlayText" Text="Select a track" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="18" Foreground="#B6AA98" FontSize="11" IsHitTestVisible="False"/>
+                </Grid>
+            </Border>
+            <StackPanel Grid.Row="4" Margin="0,7,0,0"><TextBlock x:Name="PreviewStatus" Foreground="#B6AA98" FontSize="10" TextWrapping="Wrap"/><TextBlock Text="Drag to rotate · scroll to zoom" Foreground="#A49378" FontSize="9" Margin="0,3,0,0"/></StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

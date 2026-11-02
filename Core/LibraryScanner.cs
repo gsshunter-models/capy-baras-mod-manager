@@ -22,12 +22,28 @@ public static class LibraryScanner
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
     public static LibrarySnapshot Scan(string personalFolder, string installFolder, string disabledFolder,
-        bool includeBaseGame, CancellationToken cancellationToken = default)
+        bool includeBaseGame, CancellationToken cancellationToken = default, bool collectPreviewFiles = false)
     {
-        var snapshot = new LibrarySnapshot();
+        var snapshot = new LibrarySnapshot { CollectPreviewFiles = collectPreviewFiles };
         ScanRoot(personalFolder, "Personal", false, false, snapshot, cancellationToken);
         if (includeBaseGame && !SamePath(personalFolder, installFolder))
             ScanRoot(installFolder, "Base game", false, true, snapshot, cancellationToken);
+        else if (collectPreviewFiles && !SamePath(personalFolder, installFolder) && Directory.Exists(installFolder))
+        {
+            // Ground textures also live in base-game SAFs. Index their locations without
+            // adding base-game packages to the user's inventory or extracting any assets.
+            foreach (var file in EnumerateFiles(installFolder, snapshot))
+            {
+                cancellationToken.ThrowIfCancellationRequested(); if (IsReparsePoint(file)) continue;
+                try
+                {
+                    if (Path.GetExtension(file).Equals(".saf", StringComparison.OrdinalIgnoreCase))
+                        foreach (var entry in SafArchive.ReadIndex(file)) CollectPreview(snapshot, entry.Path, file, installFolder, entry.Offset, entry.Size, true, "Base game");
+                    else CollectPreview(snapshot, Path.GetFileName(file), file, installFolder, 0, FileSize(file, snapshot), false, "Base game");
+                }
+                catch (Exception ex) when (IsFileError(ex)) { Warn(snapshot, "A base texture archive could not be indexed: " + Path.GetFileName(file)); }
+            }
+        }
         if (!string.IsNullOrWhiteSpace(disabledFolder) && Directory.Exists(disabledFolder))
         {
             foreach (var container in EnumerateDirectories(disabledFolder, snapshot))
@@ -66,6 +82,7 @@ public static class LibraryScanner
         {
             token.ThrowIfCancellationRequested();
             if (IsReparsePoint(file)) continue;
+            if (snapshot.CollectPreviewFiles) CollectPreview(snapshot, Path.GetFileName(file), file, root, 0, FileSize(file, snapshot), false, scope);
             var extension = System.IO.Path.GetExtension(file);
             if (extension.Equals(".saf", StringComparison.OrdinalIgnoreCase))
             {
@@ -118,6 +135,7 @@ public static class LibraryScanner
                     continue;
                 }
                 var virtualPath = Normalize(System.IO.Path.GetRelativePath(root, file));
+                if (snapshot.CollectPreviewFiles) CollectPreview(snapshot, virtualPath, file, root, 0, FileSize(file, snapshot), false, package.Scope);
                 package.AddVirtualFile(virtualPath);
                 if (BaseName(virtualPath).Equals("terrain.hf", StringComparison.OrdinalIgnoreCase))
                 {
@@ -148,6 +166,7 @@ public static class LibraryScanner
             {
                 token.ThrowIfCancellationRequested();
                 var path = Normalize(entry.Path);
+                CollectPreview(snapshot, path, archive, Path.GetDirectoryName(archive)!, entry.Offset, entry.Size, true, package.Scope);
                 package.AddVirtualFile(path);
                 if (BaseName(path).Equals("desc", StringComparison.OrdinalIgnoreCase))
                     descriptions.TryAdd(Parent(path), entry);
@@ -166,6 +185,12 @@ public static class LibraryScanner
             package.IndexErrors++;
             Warn(snapshot, $"Cannot index {archive}: {ex.Message}");
         }
+    }
+
+    private static void CollectPreview(LibrarySnapshot snapshot, string virtualPath, string file, string root, long offset, long size, bool archive, string scope)
+    {
+        if (snapshot.CollectPreviewFiles && snapshot.PreviewFiles.Count < 250000 && PreviewFile.Relevant(virtualPath) && PreviewCatalog.ValidPath(virtualPath))
+            snapshot.PreviewFiles.Add(new(virtualPath.Replace('\\', '/'), file, root, offset, size, archive, scope));
     }
 
     private static string? ReadLooseDescription(string path)
@@ -229,6 +254,7 @@ public static class LibraryScanner
 
     private sealed class PackageBuilder(string path, string scope, bool disabled, bool readOnly)
     {
+        public string Scope => scope;
         private readonly HashSet<string> _categories = new(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _trackIds = new(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _trackNames = new(StringComparer.OrdinalIgnoreCase);

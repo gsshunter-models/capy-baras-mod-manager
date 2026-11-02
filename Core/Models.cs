@@ -29,6 +29,8 @@ public class LibrarySnapshot
 {
     public List<ModPackage> Packages { get; set; } = [];
     public List<string> Warnings { get; set; } = [];
+    public List<PreviewFile> PreviewFiles { get; } = [];
+    internal bool CollectPreviewFiles { get; init; }
     public int UniqueTrackCount { get; set; }
     public int GearPackageCount { get; set; }
     public int BikePackageCount { get; set; }

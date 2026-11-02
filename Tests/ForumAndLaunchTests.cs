@@ -18,9 +18,27 @@ public static class ForumAndLaunchTests
         var longName = ForumDownloadPolicy.DownloadName(new string('a', 300) + ".zip", "", "https://example.com/file");
         Check(longName.Length <= 134 && longName.EndsWith(".zip"), "Long download names retain their extension.");
 
-        var start = GameLaunch.ForTrack(Path.Combine(root, "mx.exe"), "Track folder/Day layout");
-        Check(start.ArgumentList.Count == 2 && start.ArgumentList[0] == "--track" && start.ArgumentList[1] == "Track folder/Day layout" && !start.UseShellExecute, "Track launch must pass a single literal folder argument without a shell.");
-        foreach (var id in new[] { "../track", "C:/track", "--editor", "track\n--connect", "track\"quoted", "." }) Throws<InvalidDataException>(() => GameLaunch.ForTrack(Path.Combine(root, "mx.exe"), id));
+        foreach (var id in new[] { "../track", "C:/track", "--editor", "track\n--connect", "track\"quoted", "." }) Throws<InvalidDataException>(() => GameLaunch.ValidateTrackId(id));
+        var launchLibrary = Path.Combine(root, "launch-library"); var launchState = Path.Combine(root, "launch-state"); Directory.CreateDirectory(launchLibrary);
+        var config = Path.Combine(launchLibrary, "config");
+        var oldText = "# saved game\r\ntrack=OldTrack\nbike=250sxf(2018)\r\nstability=17.500000\nfork_compression_adjustment=63\r\nrider_texture=@Saved Gear\nnumber=393\nfov=105\nthrottle_key=Joystick0 axis 2\nunknown_future_setting=unchanged\n";
+        foreach (var encoding in new System.Text.Encoding[] { new System.Text.UTF8Encoding(true), new System.Text.UnicodeEncoding(false, true) })
+        {
+            var original = encoding.GetPreamble().Concat(encoding.GetBytes(oldText)).ToArray(); File.WriteAllBytes(config, original);
+            var start = GameLaunch.ForTrack(Path.Combine(root, "mx.exe"), "Track folder/Day layout", launchLibrary, launchState, false);
+            Check(start.ArgumentList.Count == 0 && !start.UseShellExecute, "Normal startup must load the saved player setup, without the single-AI --track mode.");
+            var expected = encoding.GetPreamble().Concat(encoding.GetBytes(oldText.Replace("track=OldTrack", "track=Track folder/Day layout"))).ToArray();
+            Check(File.ReadAllBytes(config).SequenceEqual(expected), "Only track changes; setup, appearance, controls, unknown fields, encoding and line endings remain exact.");
+            Check(SetupManager.ListBackups(launchState).Any(path => File.ReadAllBytes(path).SequenceEqual(original)), "The original config is backed up before track selection.");
+            var count = SetupManager.ListBackups(launchState).Count;
+            _ = GameLaunch.ForTrack(Path.Combine(root, "mx.exe"), "Track folder/Day layout", launchLibrary, launchState, false);
+            Check(count == SetupManager.ListBackups(launchState).Count, "Selecting the same track does not rewrite or create duplicate backups.");
+            Throws<InvalidOperationException>(() => GameLaunch.ForTrack(Path.Combine(root, "mx.exe"), "Other", launchLibrary, launchState, true));
+            Check(File.ReadAllBytes(config).SequenceEqual(expected), "A running game cannot have its config changed.");
+        }
+        File.Delete(config);
+        Throws<FileNotFoundException>(() => GameLaunch.ForTrack(Path.Combine(root, "mx.exe"), "NewTrack", launchLibrary, launchState, false));
+        Check(!File.Exists(config), "Missing saved config must not be replaced with defaults.");
 
         // Confirm a downloaded package takes the same transactional install/undo path.
         var zipPath = Path.Combine(root, "Forum track.zip");
