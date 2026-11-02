@@ -34,12 +34,17 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          dotnet run --project Tests/MXSimModManager.Tests.csproj -c Release
-          if ($LASTEXITCODE -ne 0) { throw 'Core tests failed.' }
-          dotnet run --project Tests.Windows/MXSimModManager.WindowsTests.csproj -c Release -p:BuildInParallel=false
-          if ($LASTEXITCODE -ne 0) { throw 'Windows tests failed.' }
-          dotnet publish Desktop/MXSimModManager.csproj -c Release --no-self-contained -p:BuildInParallel=false -o artifacts/CapyBara-Mod-Manager-v1.4.5
-          if ($LASTEXITCODE -ne 0) { throw 'Publish failed.' }
+          function Invoke-ReleaseDotnet([string]$Label, [string[]]$Arguments) {
+            & dotnet @Arguments 2>&1 | Tee-Object -Variable taskLog
+            if ($LASTEXITCODE -ne 0) {
+              $message = ($taskLog | Select-Object -Last 100 | Out-String).Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+              Write-Output "::error title=${Label}::$message"
+              throw "$Label failed."
+            }
+          }
+          Invoke-ReleaseDotnet 'Core tests' @('run', '--project', 'Tests/MXSimModManager.Tests.csproj', '-c', 'Release')
+          Invoke-ReleaseDotnet 'Windows tests' @('run', '--project', 'Tests.Windows/MXSimModManager.WindowsTests.csproj', '-c', 'Release', '-p:BuildInParallel=false')
+          Invoke-ReleaseDotnet 'Publish' @('publish', 'Desktop/MXSimModManager.csproj', '-c', 'Release', '--no-self-contained', '-p:BuildInParallel=false', '-o', 'artifacts/CapyBara-Mod-Manager-v1.4.5')
           Copy-Item -LiteralPath README.md -Destination artifacts/CapyBara-Mod-Manager-v1.4.5/README.md
           $version = (Get-Item artifacts/CapyBara-Mod-Manager-v1.4.5/CapyBaraModManager.exe).VersionInfo.ProductVersion
           if ($version -ne '1.4.5') { throw "Unexpected app version: $version" }
